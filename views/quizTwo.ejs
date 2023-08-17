@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1><%= course.course_name %></h1>
+    <h2><%= level.level_name %></h2>
+    <h3><%= level.level_description%></h3>
+
+    <form
+      action="/submit-quiz-new/<%=course.course_id%>/<%=level.level_id%>"
+      method="POST"
+    >
+      <% questions.forEach(q=>{ %>
+      <div>
+        <label> <%=q.question_text%> </label> <br />
+
+        <%let qOptions = options.filter(opt=>opt.question_id== q.question_id)%>
+        <% qOptions.forEach(opt=>{ %>
+        <input
+          type="radio"
+          name="<%=q.question_id%>"
+          id="<%=opt.option_id%>"
+          value="<%=opt.option_id%>"
+        />
+        <label for="<%=opt.option_id%>"> <%= opt.option_text %> </label>
+        <br />
+        <%})%>
+      </div>
+      <%}) %>
+
+      <input type="submit" value="Submit" />
+    </form>
+  </body>
+</html>
