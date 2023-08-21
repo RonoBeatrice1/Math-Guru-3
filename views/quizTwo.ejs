@@ -3,7 +3,121 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <link
+      rel="shortcut icon"
+      href="https://e7.pngegg.com/pngimages/541/631/png-clipart-mathematics-logo-word-problem-algebra-black-dandelion-logo-algebra.png"
+      type="image/x-icon"
+    />
+    <link
+      rel="shortcut icon"
+      href="https://e7.pngegg.com/pngimages/541/631/png-clipart-mathematics-logo-word-problem-algebra-black-dandelion-logo-algebra.png"
+      type="image/x-icon"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dosis:wght@200&family=Zeyada&display=swap"
+      rel="stylesheet"
+    />
+    <title>Quiz</title>
+    <style>
+      body {
+        font-family: "Dosis", sans-serif;
+        background-color: #f7f7f7;
+        margin: 0;
+        padding: 0;
+      }
+
+      #quizContainer {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      h3 {
+        margin-bottom: 50px;
+        text-decoration: underline 2px black;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        padding-left: 40px;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        /* font-size: 28px; */
+        padding-left: 80px;
+        text-align: center;
+      }
+
+      label.question {
+        font-size: 30px;
+      }
+
+      label.question {
+        font-size: 10px;
+      }
+
+      input[type="radio"] {
+        margin-right: 10px;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid black;
+        border-radius: 50%;
+        outline: none;
+      }
+
+      input[type="radio"]:checked {
+        border-color: darkred;
+        border-width: 5px;
+      }
+
+      input[type="radio"]:checked + label {
+        font-weight: bold;
+      }
+
+      input[type="submit"] {
+        background-color: darkred;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      input[type="submit"]:hover {
+        background-color: black;
+      }
+
+      #submit-btn {
+        font-family: "Dosis", sans-serif;
+        margin-right: 20px;
+        margin-bottom: 20px;
+        margin: 20px 20px 20px 0;
+        border-radius: 2px;
+        float: right;
+        font-size: 30px;
+        color: white;
+        font-weight: 900;
+      }
+    </style>
   </head>
   <body>
     <h1><%= course.course_name %></h1>
@@ -21,19 +135,21 @@
 
         <%let qOptions = options.filter(opt=>opt.question_id== q.question_id)%>
         <% qOptions.forEach(opt=>{ %>
-        <input
-          type="radio"
-          name="<%=q.question_id%>"
-          id="<%=opt.option_id%>"
-          value="<%=opt.option_id%>"
-        />
-        <label for="<%=opt.option_id%>"> <%= opt.option_text %> </label>
-        <br />
+        <div class="radio-option">
+          <input
+            type="radio"
+            name="<%=q.question_id%>"
+            id="<%=opt.option_id%>"
+            value="<%=opt.option_id%>"
+          />
+          <label for="<%=opt.option_id%>"> <%= opt.option_text %> </label>
+          <br />
+        </div>
         <%})%>
       </div>
       <%}) %>
-      <input type="button" value="" />
-      <input type="submit" value="Submit" />
+      <!-- <input type="button" value="" /> -->
+      <input id="submit-btn" type="submit" value="Submit" />
     </form>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
