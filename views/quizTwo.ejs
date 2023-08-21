@@ -11,7 +11,8 @@
     <h3><%= level.level_description%></h3>
 
     <form
-      action="/submit-quiz-new/<%=course.course_id%>/<%=level.level_id%>"
+      id="quizForm"
+      action="/submit-quiz-new/<%= course.course_id %>/<%= level.level_id %>"
       method="POST"
     >
       <% questions.forEach(q=>{ %>
@@ -34,5 +35,47 @@
       <input type="button" value="" />
       <input type="submit" value="Submit" />
     </form>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const quizForm = document.getElementById("quizForm");
+
+        quizForm.addEventListener("submit", (event) => {
+          event.preventDefault(); // Prevent the default form submission
+
+          const userAnswers = {}; // Object to store user's answers
+
+          // Iterate through all radio buttons and collect selected answers
+          document
+            .querySelectorAll('input[type="radio"]:checked')
+            .forEach((radio) => {
+              const questionId = radio.name;
+              const selectedOptionId = radio.value;
+              userAnswers[questionId] = selectedOptionId;
+            });
+
+          // Send the user's answers to the server
+          fetch(quizForm.action, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userAnswers }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                // Quiz submitted successfully, redirect to the home page
+                window.location.href = "/";
+              } else {
+                // Handle error scenario if needed
+                console.error("Error submitting quiz:", data.error);
+              }
+            })
+            .catch((error) => {
+              console.error("Fetch error:", error);
+            });
+        });
+      });
+    </script>
   </body>
 </html>

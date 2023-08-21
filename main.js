@@ -346,15 +346,13 @@ app.get("/courses/:courseId/levels/:levelId/quiz", (req, res) => {
   );
 });
 
-const QUIZ_SCORE_TABLE = "quizScores";
-
-// Function to fetch correct answers from the CorrectAnswers table
-const getCorrectAnswers = () => {
+// Function to fetch correct answers from the database
+function getCorrectAnswersFromDB() {
   return new Promise((resolve, reject) => {
     connection.query(
       `
       SELECT question_id, correct_option_id
-      FROM CorrectAnswers
+      FROM Correct_Answers
       `,
       (err, results) => {
         if (err) {
@@ -370,78 +368,13 @@ const getCorrectAnswers = () => {
       }
     );
   });
-};
-
-// Function to fetch user's answers from the UserAnswers table
-function getUserAnswers(userId, courseId, levelId) {
-  return new Promise((resolve, reject) => {
-    const query = `
-      SELECT ua.question_id, ua.answer
-      FROM UserAnswers ua
-      WHERE ua.user_id = ? AND ua.course_id = ? AND ua.level_id = ?
-    `;
-    connection.query(query, [userId, courseId, levelId], (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
 }
 
-// Function to compare user's answers with correct answers
-function compareAnswers(userAnswers, correctAnswers) {
-  let score = 0;
-
-  for (const questionId in userAnswers) {
-    if (userAnswers.hasOwnProperty(questionId)) {
-      const userAnswer = userAnswers[questionId];
-      const correctAnswer = correctAnswers[questionId];
-
-      if (userAnswer === correctAnswer) {
-        score++;
-      }
-    }
-  }
-
-  return score;
-}
-
-// Function to fetch questions corresponding to the user's answers
-function getQuestionsForAnswers(userAnswers) {
-  const questionIds = userAnswers.map((answer) => answer.question_id);
-  return new Promise((resolve, reject) => {
-    const query = `
-      SELECT q.question_id, q.question_text, o.option_text
-      FROM Questions q
-      INNER JOIN Options o ON q.question_id = o.question_id
-      WHERE q.question_id IN (?)
-    `;
-    connection.query(query, [questionIds], (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        const questions = results.reduce((acc, row) => {
-          if (!acc[row.question_id]) {
-            acc[row.question_id] = {
-              question_text: row.question_text,
-              options: [],
-            };
-          }
-          acc[row.question_id].options.push({ option_text: row.option_text });
-          return acc;
-        }, {});
-        resolve(Object.values(questions));
-      }
-    });
-  });
-}
-
+// Function to insert the calculated quiz score into the quizScores table
 function insertQuizScore(userId, username, courseId, levelId, score) {
   return new Promise((resolve, reject) => {
     const query = `
-      INSERT INTO quizScores (user_id, username, course_id, level_id, score)
+      INSERT INTO QuizScores (user_id, username, course_id, level_id, score)
       VALUES (?, ?, ?, ?, ?)
     `;
     connection.query(
@@ -458,56 +391,73 @@ function insertQuizScore(userId, username, courseId, levelId, score) {
     );
   });
 }
-app.post("/submit-quiz-new/:courseId/:levelId", (req, res) => {
-  console.log(req.params.courseId);
-  console.log(req.params.levelId);
-  console.log(req.body); // { q:op, q:op}
-  // compare req.body.answers with correct answers in db and create score
-  // save the in in scores table
-  res.redirect("/");
-});
 
-app.post("/submit-quiz", async (req, res) => {
-  try {
-    const userId = req.session.user.id;
-    const courseId = req.body.courseId;
-    const levelId = req.body.levelId;
-    const userAnswers = req.body.answers;
-    // let useranswers=[req.body.question_1,req.body.question_]
-    // go to db for answers for course_id and level_id
-
-    // compare for results
-    // save info in db
-
-    const correctAnswers = await getCorrectAnswers();
-
-    const score = compareAnswers(userAnswers, correctAnswers);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error submitting quiz:", error);
-    res.status(500).json({ error: "Error submitting quiz" });
+// Middleware to require user authentication
+const requireLogin = (req, res, next) => {
+  if (req.session.isLoggedIn && req.session.user) {
+    next(); // User is logged in, proceed to the next middleware/route handler
+  } else {
+    res.redirect("/login"); // Redirect to login page if not logged in
   }
-});
+};
 
-app.get("/score", async (req, res) => {
-  try {
-    const userId = req.session.user.id;
-    const courseId = req.query.courseId;
-    const levelId = req.query.levelId;
+// Route to handle quiz submission and calculate/save score
+app.post(
+  "/submit-quiz-new/:courseId/:levelId",
+  requireLogin,
+  async (req, res) => {
+    try {
+      const userId = req.session.user.id;
+      const courseId = req.params.courseId;
+      const levelId = req.params.levelId;
+      const userAnswers = req.body.userAnswers; // Make sure it matches the field name sent from the client
 
-    const userAnswers = await getUserAnswers(userId, courseId, levelId);
-    const correctAnswers = await getCorrectAnswers();
-    const questions = await getQuestionsForAnswers(userAnswers);
+      console.log("User Answers:", userAnswers);
 
-    const score = calculateQuizScore(userAnswers, correctAnswers);
+      // Get correct answers from the database
+      const correctAnswers = await getCorrectAnswersFromDB();
 
-    res.render("score", { score, questions });
-  } catch (error) {
-    console.error("Error calculating score:", error);
-    res.status(500).send("Error calculating score");
+      console.log("Correct Answers:", correctAnswers);
+
+      // Calculate the score by comparing user's answers with correct answers
+      const totalQuestions = Object.keys(correctAnswers).length;
+      let correctCount = 0;
+
+      for (const questionId in correctAnswers) {
+        if (correctAnswers.hasOwnProperty(questionId)) {
+          const userAnswer = userAnswers[questionId];
+          const correctAnswer = correctAnswers[questionId];
+
+          if (userAnswer === correctAnswer) {
+            correctCount++;
+          }
+        }
+      }
+
+      const score = (correctCount / totalQuestions) * 100;
+
+      // Insert the calculated score into the quizScores table
+      await insertQuizScore(
+        userId,
+        req.session.user.username,
+        courseId,
+        levelId,
+        score
+      );
+
+      console.log("Score:", score);
+
+      console.log("Quiz submission successful!");
+
+      res.json({ success: true, score });
+    } catch (error) {
+      console.error("Error submitting quiz:", error);
+      res.status(500).json({ error: "Error submitting quiz" });
+    }
   }
-});
+);
+
+// ... (remaining code)
 
 app.get("/logout", (req, res) => {
   // Destroy the session and redirect to the home page
