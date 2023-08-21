@@ -40,11 +40,10 @@
         const quizForm = document.getElementById("quizForm");
 
         quizForm.addEventListener("submit", (event) => {
-          event.preventDefault(); // Prevent the default form submission
+          event.preventDefault();
 
-          const userAnswers = {}; // Object to store user's answers
+          const userAnswers = {};
 
-          // Iterate through all radio buttons and collect selected answers
           document
             .querySelectorAll('input[type="radio"]:checked')
             .forEach((radio) => {
@@ -53,7 +52,6 @@
               userAnswers[questionId] = selectedOptionId;
             });
 
-          // Send the user's answers to the server
           fetch(quizForm.action, {
             method: "POST",
             headers: {
@@ -64,10 +62,8 @@
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
-                // Quiz submitted successfully, redirect to the home page
                 window.location.href = "/";
               } else {
-                // Handle error scenario if needed
                 console.error("Error submitting quiz:", data.error);
               }
             })

@@ -392,12 +392,11 @@ function insertQuizScore(userId, username, courseId, levelId, score) {
   });
 }
 
-// Middleware to require user authentication
 const requireLogin = (req, res, next) => {
   if (req.session.isLoggedIn && req.session.user) {
-    next(); // User is logged in, proceed to the next middleware/route handler
+    next();
   } else {
-    res.redirect("/login"); // Redirect to login page if not logged in
+    res.redirect("/login");
   }
 };
 
@@ -410,16 +409,14 @@ app.post(
       const userId = req.session.user.id;
       const courseId = req.params.courseId;
       const levelId = req.params.levelId;
-      const userAnswers = req.body.userAnswers; // Make sure it matches the field name sent from the client
+      const userAnswers = req.body.userAnswers;
 
       console.log("User Answers:", userAnswers);
 
-      // Get correct answers from the database
       const correctAnswers = await getCorrectAnswersFromDB();
 
       console.log("Correct Answers:", correctAnswers);
 
-      // Calculate the score by comparing user's answers with correct answers
       const totalQuestions = Object.keys(correctAnswers).length;
       let correctCount = 0;
 
@@ -436,7 +433,6 @@ app.post(
 
       const score = (correctCount / totalQuestions) * 100;
 
-      // Insert the calculated score into the quizScores table
       await insertQuizScore(
         userId,
         req.session.user.username,
@@ -456,8 +452,6 @@ app.post(
     }
   }
 );
-
-// ... (remaining code)
 
 app.get("/logout", (req, res) => {
   // Destroy the session and redirect to the home page
@@ -498,7 +492,7 @@ app.get("/quizform", (req, res) => {
   res.render("quizform.ejs");
 });
 
-const port = 3005;
+const port = 3010;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

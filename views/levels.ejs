@@ -410,13 +410,13 @@ a:active {
   
       <% if (level.level_id === 1) { %>
         <a href="/courses/<%= courseId %>/levels/<%= level.level_id %>/quiz" class="start-quiz-button">
-          <i class="fas fa-unlock"></i> <!-- This is the icon for the open level -->
+          <i class="fas fa-unlock"></i> 
           Start Quiz
         </a>
       <% } else { %>
         <!-- scrores-- course-- max()>1 -->
         <span class="start-quiz-button inactive">
-          <i class="fas fa-lock"></i> <!-- This is the icon for locked levels -->
+          <i class="fas fa-lock"></i> 
           Locked
         </span>
       <% } %>
