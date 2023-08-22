@@ -404,21 +404,28 @@ a:active {
       <h1><%= courseName %> Levels</h1>
   <div class="levels-container">
     <% for (const level of levels) { %>
+     
     <div class="card">
       <h2><%= level.level_name %></h2>
       <p class="p-course"><%= level.level_description %></p>
-  
-      <% if (level.level_id === 1) { %>
+      
+      <% if (level.level_name === "Level 1") { %>
         <a href="/courses/<%= courseId %>/levels/<%= level.level_id %>/quiz" class="start-quiz-button">
           <i class="fas fa-unlock"></i> 
           Start Quiz
         </a>
-      <% } else { %>
+      <% }else if(level.level_id <= Math.max(...userLevelsArray)+1)  { %>
         <!-- scrores-- course-- max()>1 -->
-        <span class="start-quiz-button inactive">
-          <i class="fas fa-lock"></i> 
-          Locked
-        </span>
+        <a href="/courses/<%= courseId %>/levels/<%= level.level_id %>/quiz" class="start-quiz-button">
+          <i class="fas fa-unlock"></i> 
+          Start Quiz
+        </a>
+        <%}else{%>
+
+          <span class="start-quiz-button inactive">
+            <i class="fas fa-lock"></i> 
+            Locked
+          </span>
       <% } %>
     </div>
     <% } %>

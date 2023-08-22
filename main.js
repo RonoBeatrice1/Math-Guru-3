@@ -217,7 +217,28 @@ app.get("/courses/:courseName/levels", (req, res) => {
 
       const levelsData = levelsResult;
 
-      res.render("levels.ejs", { courseId, courseName, levels: levelsData });
+      // get scores
+      const queryVars = [req.session.user.id, courseResult[0].course_id];
+      connection.query(
+        "SELECT DISTINCT level_id FROM QuizScores WHERE user_id = ? AND course_id = ?",
+        queryVars,
+        (queryErr, userLevels) => {
+          console.log(userLevels);
+          let userLevelsArray = [];
+          if (userLevels.length > 0) {
+            userLevels.forEach((userLevel) => {
+              userLevelsArray.push(userLevel.level_id);
+            });
+          }
+          console.log(userLevelsArray);
+          res.render("levels.ejs", {
+            courseId,
+            courseName,
+            levels: levelsData,
+            userLevelsArray: userLevelsArray,
+          });
+        }
+      );
     });
   });
 });
@@ -416,21 +437,18 @@ app.post(
       const correctAnswers = await getCorrectAnswersFromDB();
 
       console.log("Correct Answers:", correctAnswers);
-
-      const totalQuestions = Object.keys(correctAnswers).length;
       let correctCount = 0;
 
-      for (const questionId in correctAnswers) {
-        if (correctAnswers.hasOwnProperty(questionId)) {
-          const userAnswer = userAnswers[questionId];
-          const correctAnswer = correctAnswers[questionId];
-
-          if (userAnswer === correctAnswer) {
-            correctCount++;
-          }
+      let levelQuestions = Object.keys(userAnswers);
+      console.log(levelQuestions);
+      levelQuestions.forEach((quest) => {
+        if (userAnswers[quest] == correctAnswers[quest]) {
+          correctCount++;
         }
-      }
-
+      });
+      const totalQuestions = Object.keys(userAnswers).length;
+      console.log(correctCount);
+      console.log(totalQuestions);
       const score = (correctCount / totalQuestions) * 100;
 
       await insertQuizScore(
